@@ -21,7 +21,7 @@ class GetApplicationRelease(
 
         // Limit checks to once every 3 days at most
         val nextCheckTime = Instant.ofEpochMilli(lastChecked.get()).plus(3, ChronoUnit.DAYS)
-        if (!arguments.forceCheck && now.isBefore(nextCheckTime)) {
+        if (!arguments.forceCheck) {
             return Result.NoNewUpdate
         }
 
