@@ -200,7 +200,7 @@ class Downloader(
                     val activeDownloads = queue.asSequence()
                         // Ignore completed downloads, leave them in the queue
                         .filter { it.status.value <= Download.State.DOWNLOADING.value }
-                        .groupBy { it.source }
+                        .groupBy { if (it.source is UnmeteredSource) it.chapter.id else it.source }
                         .toList()
                         .take(parallelCount)
                         .map { (_, downloads) -> downloads.first() }
