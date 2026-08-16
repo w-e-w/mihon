@@ -7,6 +7,7 @@ class GetApplicationRelease(
     private val service: ReleaseService,
 ) {
     suspend fun await(arguments: Arguments): Result {
+        if (true) return Result.NoNewUpdate
         val release = service.latest(arguments) ?: return Result.NoNewUpdate
 
         // Check if latest version is different from current version
