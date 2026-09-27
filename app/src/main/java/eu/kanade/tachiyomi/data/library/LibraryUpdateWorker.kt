@@ -24,6 +24,7 @@ import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
+import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import eu.kanade.tachiyomi.util.system.isConnectedToWifi
@@ -262,7 +263,7 @@ class LibraryUpdateWorker(private val context: Context, workerParams: WorkerPara
         val fetchWindow = fetchInterval.getWindow(Clock.System.now().toLocalDateTime(timeZone).date, timeZone)
 
         coroutineScope {
-            mangaToUpdate.groupBy { it.manga.source }.values
+            mangaToUpdate.groupBy { if (sourceManager.getOrStub(it.manga.source) is UnmeteredSource) it.manga.id else it.manga.source }.values
                 .map { mangaInSource ->
                     async {
                         semaphore.withPermit {
