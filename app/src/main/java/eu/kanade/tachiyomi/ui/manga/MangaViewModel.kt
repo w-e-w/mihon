@@ -789,12 +789,25 @@ class MangaViewModel(
             refreshTrackers()
 
             val tracks = getTracks.await(mangaId)
+            val hasKomgaTracker = tracks.any { trackerManager.get(it.trackerId) is eu.kanade.tachiyomi.data.track.komga.Komga }
             val maxChapterNumber = chapters.maxOf { it.chapterNumber }
-            val shouldPromptTrackingUpdate = tracks.any { track -> maxChapterNumber > track.lastChapterRead }
+            val shouldPromptTrackingUpdate = hasKomgaTracker || tracks.any { track -> maxChapterNumber > track.lastChapterRead }
 
             if (!shouldPromptTrackingUpdate) return@launch
+
+            val performTrackingUpdate = suspend {
+                chapters.forEach { chapter ->
+                    trackChapter.await(
+                        context = context,
+                        mangaId = mangaId,
+                        chapterNumber = chapter.chapterNumber.toDouble(),
+                        chapterUrl = chapter.url,
+                    )
+                }
+            }
+
             if (autoTrackState == AutoTrackState.ALWAYS) {
-                trackChapter.await(context, mangaId, maxChapterNumber)
+                performTrackingUpdate()
                 context.toast(context.stringResource(MR.strings.trackers_updated_summary, maxChapterNumber.toInt()))
                 return@launch
             }
@@ -807,7 +820,7 @@ class MangaViewModel(
             )
 
             if (result == SnackbarResult.ActionPerformed) {
-                trackChapter.await(context, mangaId, maxChapterNumber)
+                performTrackingUpdate()
             }
         }
     }
