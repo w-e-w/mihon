@@ -1076,7 +1076,12 @@ class ReaderViewModel(
 
         // Reading the last page and leaving right away is common, so it outlives the reader
         appScope.launch {
-            trackChapter.await(context, manga.id, readerChapter.chapter.chapterNumber)
+            trackChapter.await(
+                context = context,
+                mangaId = manga.id,
+                chapterNumber = readerChapter.chapter.chapterNumber.toDouble(),
+                chapterUrl = readerChapter.chapter.url,
+            )
         }
     }
 

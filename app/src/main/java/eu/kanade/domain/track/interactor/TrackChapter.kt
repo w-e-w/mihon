@@ -23,24 +23,37 @@ class TrackChapter(
     private val delayedTrackingStore: DelayedTrackingStore,
 ) {
 
-    suspend fun await(context: Context, mangaId: Long, chapterNumber: Double, setupJobOnFailure: Boolean = true) {
+suspend fun await(context: Context, mangaId: Long, chapterNumber: Double, chapterUrl: String? = null, setupJobOnFailure: Boolean = true) {
         coroutineScope {
             val tracks = getTracks.await(mangaId)
             if (tracks.isEmpty()) return@coroutineScope
 
             tracks.mapNotNull { track ->
                 val service = trackerManager.get(track.trackerId)
-                if (service == null || !service.isLoggedIn || chapterNumber <= track.lastChapterRead) {
+                if (service == null || !service.isLoggedIn) {
+                    return@mapNotNull null
+                }
+                if (chapterUrl == null && chapterNumber <= track.lastChapterRead) {
                     return@mapNotNull null
                 }
 
                 async {
                     runCatching {
                         try {
-                            val updatedTrack = service.refresh(track.toDbTrack())
-                                .toDomainTrack(idRequired = true)!!
-                                .copy(lastChapterRead = chapterNumber)
-                            service.update(updatedTrack.toDbTrack(), true)
+                            val isKomga = service is eu.kanade.tachiyomi.data.track.komga.Komga
+                            val refreshedTrack = if (isKomga && chapterUrl != null) {
+                                track
+                            } else {
+                                service.refresh(track.toDbTrack()).toDomainTrack(idRequired = true)!!
+                            }
+
+                            val updatedTrack = if (isKomga) {
+                                refreshedTrack.copy(lastChapterRead = 0.0)
+                            } else {
+                                refreshedTrack.copy(lastChapterRead = maxOf(refreshedTrack.lastChapterRead, chapterNumber))
+                            }
+
+                            service.update(updatedTrack.toDbTrack(), true, chapterUrl)
                             upsertTrack.await(updatedTrack)
                             delayedTrackingStore.remove(track.id)
                         } catch (e: Exception) {
