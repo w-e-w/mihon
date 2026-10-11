@@ -36,50 +36,54 @@ class KomgaApi(
     suspend fun getTrackSearch(url: String): TrackSearch =
         withContext(Dispatchers.IO) {
             try {
-                val track = with(json) {
+                with(json) {
                     if (url.contains(READLIST_API)) {
-                        client.newCall(GET(url, headers))
+                        val readList = client.newCall(GET(url, headers))
                             .awaitSuccess()
                             .parseAs<ReadListDto>()
-                            .toTrack()
-                    } else {
-                        client.newCall(GET(url, headers))
-                            .awaitSuccess()
-                            .parseAs<SeriesDto>()
-                            .toTrack()
-                    }
-                }
 
-                val progress = client
-                    .newCall(
-                        GET("${url.replace("/api/v1/series/", "/api/v2/series/")}/read-progress/tachiyomi", headers),
-                    )
-                    .awaitSuccess().let {
-                        with(json) {
-                            if (url.contains("/api/v1/series/")) {
-                                it.parseAs<ReadProgressV2Dto>()
-                            } else {
-                                it.parseAs<ReadProgressDto>().toV2()
-                            }
+                        return@withContext readList.toTrack().apply {
+                            cover_url = "$url/thumbnail"
+                            tracking_url = url
+                            total_chapters = readList.bookIds.size.toLong()
+                            last_chapter_read = 0.0
                         }
                     }
 
-                track.apply {
-                    cover_url = "$url/thumbnail"
-                    tracking_url = url
-                    total_chapters = progress.maxNumberSort.toLong()
-                    status = when (progress.booksCount) {
-                        progress.booksUnreadCount -> Komga.UNREAD
-                        progress.booksReadCount -> Komga.COMPLETED
-                        else -> Komga.READING
+                    val series = client.newCall(GET(url, headers))
+                        .awaitSuccess()
+                        .parseAs<SeriesDto>()
+
+                    series.toTrack().apply {
+                        cover_url = "$url/thumbnail"
+                        tracking_url = url
+                        total_chapters = series.booksCount.toLong()
+                        status = when (series.booksCount) {
+                            series.booksUnreadCount -> Komga.UNREAD
+                            series.booksReadCount -> Komga.COMPLETED
+                            else -> Komga.READING
+                        }
+                        last_chapter_read = 0.0
                     }
-                    last_chapter_read = progress.lastReadContinuousNumberSort
                 }
             } catch (e: Exception) {
                 logcat(LogPriority.WARN, e) { "Could not get item: $url" }
                 throw e
             }
         }
+
+    suspend fun updateBookProgress(track: Track, bookId: String, completed: Boolean) {
+        val baseUrl = track.tracking_url.substringBefore("/api/v1/")
+        val url = "$baseUrl/api/v1/books/$bookId/read-progress"
+        val payload = """{"completed":$completed}"""
+        client.newCall(
+            Request.Builder()
+                .url(url)
+                .headers(headers)
+                .patch(payload.toRequestBody("application/json".toMediaType()))
+                .build(),
+        ).awaitSuccess().close()
+    }
 
     suspend fun updateProgress(track: Track): Track {
         val payload = if (track.tracking_url.contains("/api/v1/series/")) {
