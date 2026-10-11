@@ -51,6 +51,9 @@ import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -70,6 +73,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.core.metro.AppCoroutineScope
@@ -789,12 +794,50 @@ class MangaViewModel(
             refreshTrackers()
 
             val tracks = getTracks.await(mangaId)
+            val hasKomgaTracker = tracks.any { trackerManager.get(it.trackerId) is eu.kanade.tachiyomi.data.track.komga.Komga }
             val maxChapterNumber = chapters.maxOf { it.chapterNumber }
-            val shouldPromptTrackingUpdate = tracks.any { track -> maxChapterNumber > track.lastChapterRead }
+            val shouldPromptTrackingUpdate = hasKomgaTracker || tracks.any { track -> maxChapterNumber > track.lastChapterRead }
 
             if (!shouldPromptTrackingUpdate) return@launch
+
+            val performTrackingUpdate = suspend {
+                val komgaTrack = tracks.find { trackerManager.get(it.trackerId) is eu.kanade.tachiyomi.data.track.komga.Komga }
+                if (komgaTrack != null) {
+                    val semaphore = Semaphore(10)
+                    coroutineScope {
+                        chapters.map { chapter ->
+                            async {
+                                semaphore.withPermit {
+                                    trackChapter.await(
+                                        context = context,
+                                        mangaId = mangaId,
+                                        chapterNumber = chapter.chapterNumber.toDouble(),
+                                        chapterUrl = chapter.url,
+                                        trackerId = komgaTrack.trackerId,
+                                        saveToDb = false,
+                                    )
+                                }
+                            }
+                        }.awaitAll()
+                    }
+                    refreshTrackers()
+                }
+                val nonKomgaTracks = tracks.filterNot { trackerManager.get(it.trackerId) is eu.kanade.tachiyomi.data.track.komga.Komga }
+                if (nonKomgaTracks.isNotEmpty()) {
+                    nonKomgaTracks.forEach { nonKomgaTrack ->
+                        trackChapter.await(
+                            context = context,
+                            mangaId = mangaId,
+                            chapterNumber = maxChapterNumber,
+                            chapterUrl = null,
+                            trackerId = nonKomgaTrack.trackerId,
+                        )
+                    }
+                }
+            }
+
             if (autoTrackState == AutoTrackState.ALWAYS) {
-                trackChapter.await(context, mangaId, maxChapterNumber)
+                performTrackingUpdate()
                 context.toast(context.stringResource(MR.strings.trackers_updated_summary, maxChapterNumber.toInt()))
                 return@launch
             }
@@ -807,7 +850,7 @@ class MangaViewModel(
             )
 
             if (result == SnackbarResult.ActionPerformed) {
-                trackChapter.await(context, mangaId, maxChapterNumber)
+                performTrackingUpdate()
             }
         }
     }
