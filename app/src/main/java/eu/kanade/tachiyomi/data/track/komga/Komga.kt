@@ -50,17 +50,25 @@ class Komga(id: Long) : BaseTracker(id, "Komga"), EnhancedTracker {
     override fun displayScore(track: DomainTrack): String = ""
 
     override suspend fun update(track: Track, didReadChapter: Boolean): Track {
-        if (track.status != COMPLETED) {
-            if (didReadChapter) {
-                if (track.last_chapter_read.toLong() == track.total_chapters && track.total_chapters > 0) {
-                    track.status = COMPLETED
-                } else {
-                    track.status = READING
+        return update(track, didReadChapter, null)
+    }
+
+    override suspend fun update(track: Track, didReadChapter: Boolean, chapterUrl: String?): Track {
+        if (!chapterUrl.isNullOrEmpty() && chapterUrl.contains("/api/v1/books/")) {
+            val bookId = chapterUrl.substringAfter("/api/v1/books/").substringBefore("/").substringBefore("?")
+            if (bookId.isNotEmpty()) {
+                api.updateBookProgress(track, bookId, completed = true)
+                if (track.status != COMPLETED) {
+                    if (didReadChapter && track.total_chapters > 0 && track.last_chapter_read.toLong() >= track.total_chapters) {
+                        track.status = COMPLETED
+                    } else if (track.status == UNREAD) {
+                        track.status = READING
+                    }
                 }
+                return track
             }
         }
-
-        return api.updateProgress(track)
+        return track
     }
 
     override suspend fun bind(track: Track, hasReadChapters: Boolean): Track {
@@ -75,6 +83,7 @@ class Komga(id: Long) : BaseTracker(id, "Komga"), EnhancedTracker {
         val remoteTrack = api.getTrackSearch(track.tracking_url)
         track.copyPersonalFrom(remoteTrack)
         track.total_chapters = remoteTrack.total_chapters
+        track.last_chapter_read = 0.0
         return track
     }
 

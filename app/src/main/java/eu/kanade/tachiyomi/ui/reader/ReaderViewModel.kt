@@ -918,7 +918,7 @@ class ReaderViewModel @JvmOverloads constructor(
         val context = Injekt.get<Application>()
 
         viewModelScope.launchNonCancellable {
-            trackChapter.await(context, manga.id, readerChapter.chapter.chapter_number.toDouble())
+            trackChapter.await(context, manga.id, readerChapter.chapter.chapter_number.toDouble(), readerChapter.chapter.url)
         }
     }
 
