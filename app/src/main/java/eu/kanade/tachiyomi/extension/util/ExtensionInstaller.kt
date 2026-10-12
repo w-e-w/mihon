@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.extension.util
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
+import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import dev.zacsweers.metro.Inject
@@ -29,6 +30,7 @@ import mihon.core.metro.AppCoroutineScope
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.storage.service.StorageManager
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
@@ -43,6 +45,7 @@ class ExtensionInstaller(
     private val context: Context,
     basePreferences: BasePreferences,
     networkHelper: NetworkHelper,
+    private val storageManager: StorageManager,
 ) {
 
     private val activeJobs = ConcurrentHashMap<String, Job>()
@@ -93,6 +96,10 @@ class ExtensionInstaller(
                 if (packageInfo == null) {
                     tmpFile.delete()
                     throw Exception("Extension isn't signed with the key of ${extension.store.name}")
+                }
+
+                runInterruptible {
+                    backupExtensionApk(tmpFile, packageInfo)
                 }
 
                 ensureActive()
@@ -204,6 +211,30 @@ class ExtensionInstaller(
      */
     fun updateInstallStep(downloadId: Long, step: InstallStep) {
         activeSteps[downloadId]?.let { it.value = step }
+    }
+
+    private fun backupExtensionApk(sourceFile: File, packageInfo: PackageInfo) {
+        runCatching {
+            val backupDir = storageManager.getExtensionBackupsDirectory() ?: return
+            val pkgName = packageInfo.packageName
+            val versionName = packageInfo.versionName ?: "unknown"
+            val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                packageInfo.longVersionCode
+            } else {
+                @Suppress("DEPRECATION")
+                packageInfo.versionCode.toLong()
+            }
+            val fileName = "${pkgName}_v${versionName}_${versionCode}.apk"
+            val targetFile = backupDir.createFile(fileName) ?: return
+
+            sourceFile.inputStream().use { input ->
+                targetFile.openOutputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+        }.onFailure {
+            logcat(LogPriority.WARN, it) { "Failed to backup extension APK for ${packageInfo.packageName}" }
+        }
     }
 
     companion object {
