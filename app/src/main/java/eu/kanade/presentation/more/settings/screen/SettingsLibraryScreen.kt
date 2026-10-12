@@ -191,6 +191,12 @@ object SettingsLibraryScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_library_update_refresh_metadata),
                     subtitle = stringResource(MR.strings.pref_library_update_refresh_metadata_summary),
                 ),
+                Preference.PreferenceItem.SliderPreference(
+                    preference = libraryPreferences.autoUpdateParallelLimit,
+                    valueRange = 1..15,
+                    title = stringResource(MR.strings.pref_library_update_parallel_limit),
+                    subtitle = stringResource(MR.strings.pref_library_update_parallel_limit_summary),
+                ),
                 Preference.PreferenceItem.MultiSelectListPreference(
                     preference = libraryPreferences.autoUpdateMangaRestrictions,
                     entries = mapOf(

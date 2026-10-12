@@ -43,6 +43,8 @@ class LibraryPreferences(
     )
     val autoUpdateInterval: Preference<Int> = preferenceStore.getInt("pref_library_update_interval_key", 0)
 
+    val autoUpdateParallelLimit: Preference<Int> = preferenceStore.getInt("pref_library_update_parallel_limit", 5)
+
     val autoUpdateDeviceRestrictions: Preference<Set<String>> = preferenceStore.getStringSet(
         "library_update_restriction",
         setOf(
