@@ -307,6 +307,9 @@
     <string name="pref_library_update_refresh_metadata">Automatically refresh metadata</string>
     <string name="pref_library_update_refresh_metadata_summary">Check for new cover and details when updating library</string>
 
+    <string name="pref_library_update_parallel_limit">Concurrent update checks</string>
+    <string name="pref_library_update_parallel_limit_summary">Maximum number of parallel requests sent when updating library</string>
+
     <string name="default_category">Default category</string>
     <string name="default_category_summary">Always ask</string>
     <string name="categorized_display_settings">Per-category settings for sort</string>
