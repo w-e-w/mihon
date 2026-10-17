@@ -32,11 +32,11 @@ class NetworkHelper(
             .connectTimeout(30.seconds)
             .readTimeout(30.seconds)
             .callTimeout(2.minutes)
-            .cache(
-                Cache(
-                    directory = File(context.cacheDir, "network_cache"),
-                    maxSize = 5L * 1024 * 1024, // 5 MiB
-                ),
+            .dispatcher(
+                okhttp3.Dispatcher().apply {
+                    maxRequests = 1024
+                    maxRequestsPerHost = 1024
+                },
             )
             .addInterceptor(UncaughtExceptionInterceptor())
             .addInterceptor(UserAgentInterceptor(::defaultUserAgentProvider))
