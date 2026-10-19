@@ -120,21 +120,35 @@ open class ReaderPageImageView @JvmOverloads constructor(
     }
 
     private fun SubsamplingScaleImageView.landscapeZoom(forward: Boolean) {
+        val currentConfig = config
+        val isSupportedScaleType = currentConfig != null && (
+            currentConfig.minimumScaleType == SCALE_TYPE_CENTER_INSIDE ||
+                currentConfig.minimumScaleType == SCALE_TYPE_FIT_SCREEN_LIMITED
+            )
+
+        val isAtMinScale = scale == minScale || currentConfig?.minimumScaleType == SCALE_TYPE_FIT_SCREEN_LIMITED
         if (
-            config != null &&
-            config!!.landscapeZoom &&
-            config!!.minimumScaleType == SCALE_TYPE_CENTER_INSIDE &&
+            currentConfig != null &&
+            currentConfig.landscapeZoom &&
+            isSupportedScaleType &&
             sWidth > sHeight &&
-            scale == minScale
+            isAtMinScale
         ) {
             handler?.postDelayed(500) {
-                val point = when (config!!.zoomStartPosition) {
+                val point = when (currentConfig.zoomStartPosition) {
                     ZoomStartPosition.LEFT -> if (forward) PointF(0F, 0F) else PointF(sWidth.toFloat(), 0F)
                     ZoomStartPosition.RIGHT -> if (forward) PointF(sWidth.toFloat(), 0F) else PointF(0F, 0F)
                     ZoomStartPosition.CENTER -> center
                 }
 
-                val targetScale = height.toFloat() / sHeight.toFloat()
+                val fitHeightScale = height.toFloat() / sHeight.toFloat()
+                val targetScale = if (currentConfig.minimumScaleType == SCALE_TYPE_FIT_SCREEN_LIMITED) {
+                    val maxUpscale = (currentConfig.maxUpscaleRatio.coerceAtLeast(100)) / 100f
+                    minOf(fitHeightScale, maxUpscale)
+                } else {
+                    fitHeightScale
+                }
+
                 animateScaleAndCenter(targetScale, point)!!
                     .withDuration(500)
                     .withEasing(EASE_IN_OUT_QUAD)
