@@ -274,6 +274,13 @@ object SettingsReaderScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_page_rotate_invert),
                     visible = rotateToFit,
                 ),
+                Preference.PreferenceItem.SliderPreference(
+                    preference = readerPreferences.maxUpscaleRatio,
+                    valueRange = 100..300,
+                    title = stringResource(MR.strings.pref_max_upscale_limit),
+                    valueText = { "${it}%" },
+                    visible = imageScaleType == 7,
+                ),
             ),
         )
     }

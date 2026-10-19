@@ -77,6 +77,8 @@ class ReaderPreferences(
         true,
     )
 
+    val maxUpscaleRatio: Preference<Int> = preferenceStore.getInt("pref_max_upscale_ratio_key", 200)
+
     val imageScaleType: Preference<Int> = preferenceStore.getInt("pref_image_scale_type_key", 1)
 
     val zoomStart: Preference<Int> = preferenceStore.getInt("pref_zoom_start_key", 1)
@@ -245,6 +247,7 @@ class ReaderPreferences(
             MR.strings.scale_type_fit_height,
             MR.strings.scale_type_original_size,
             MR.strings.scale_type_smart_fit,
+            MR.strings.scale_type_fit_screen_limited,
         )
 
         val ZoomStart = listOf(

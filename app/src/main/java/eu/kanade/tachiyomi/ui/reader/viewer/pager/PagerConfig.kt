@@ -46,6 +46,9 @@ class PagerConfig(
     var landscapeZoom = false
         private set
 
+    var maxUpscaleRatio = 200
+        private set
+
     init {
         readerPreferences.readerTheme
             .register(
@@ -103,6 +106,12 @@ class PagerConfig(
             .register(
                 { dualPageRotateToFitInvert = it },
                 { imagePropertyChangedListener?.invoke() },
+            )
+
+        readerPreferences.maxUpscaleRatio
+            .register(
+                { maxUpscaleRatio = it },
+                { imagePropertyChangedListener?.invoke() }
             )
     }
 

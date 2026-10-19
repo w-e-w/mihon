@@ -262,6 +262,28 @@ open class ReaderPageImageView @JvmOverloads constructor(
     }
 
     private fun SubsamplingScaleImageView.setupZoom(config: Config?) {
+        if (config?.minimumScaleType == SCALE_TYPE_FIT_SCREEN_LIMITED && sWidth > 0 && sHeight > 0 && width > 0 && height > 0) {
+            val widthRatio = width.toFloat() / sWidth.toFloat()
+            val heightRatio = height.toFloat() / sHeight.toFloat()
+            val fitScale = minOf(widthRatio, heightRatio)
+
+            val maxUpscale = (config.maxUpscaleRatio.coerceAtLeast(100)) / 100f
+            if (fitScale > maxUpscale) {
+                setMinimumScaleType(SubsamplingScaleImageView.SCALE_TYPE_CUSTOM)
+                minScale = maxUpscale
+                maxScale = maxUpscale * MAX_ZOOM_SCALE
+                setDoubleTapZoomScale(maxUpscale * 2)
+
+                val targetPoint = when (config.zoomStartPosition) {
+                    ZoomStartPosition.LEFT -> PointF(0F, 0F)
+                    ZoomStartPosition.RIGHT -> PointF(sWidth.toFloat(), 0F)
+                    ZoomStartPosition.CENTER -> PointF(sWidth / 2f, sHeight / 2f)
+                }
+                setScaleAndCenter(maxUpscale, targetPoint)
+                return
+            }
+        }
+
         // 5x zoom
         maxScale = scale * MAX_ZOOM_SCALE
         setDoubleTapZoomScale(scale * 2)
@@ -279,7 +301,11 @@ open class ReaderPageImageView @JvmOverloads constructor(
         config: Config,
     ) = (pageView as? SubsamplingScaleImageView)?.apply {
         setDoubleTapZoomDuration(config.zoomDuration.getSystemScaledDuration())
-        setMinimumScaleType(config.minimumScaleType)
+        if (config.minimumScaleType == SCALE_TYPE_FIT_SCREEN_LIMITED) {
+            setMinimumScaleType(SCALE_TYPE_CENTER_INSIDE)
+        } else {
+            setMinimumScaleType(config.minimumScaleType)
+        }
         setMinimumDpi(1) // Just so that very small image will be fit for initial load
         setCropBorders(config.cropBorders)
         setOnImageEventListener(
@@ -440,6 +466,7 @@ open class ReaderPageImageView @JvmOverloads constructor(
         val cropBorders: Boolean = false,
         val zoomStartPosition: ZoomStartPosition = ZoomStartPosition.CENTER,
         val landscapeZoom: Boolean = false,
+        val maxUpscaleRatio: Int = 200,
     )
 
     enum class ZoomStartPosition {
@@ -450,3 +477,4 @@ open class ReaderPageImageView @JvmOverloads constructor(
 }
 
 private const val MAX_ZOOM_SCALE = 5F
+private const val SCALE_TYPE_FIT_SCREEN_LIMITED = 7

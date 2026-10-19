@@ -85,6 +85,18 @@ private fun ColumnScope.PagerViewerSettings(viewModel: ReaderSettingsViewModel) 
         }
     }
 
+    val maxUpscaleRatio by viewModel.preferences.maxUpscaleRatio.collectAsState()
+    if (imageScaleType == 7) {
+        SliderItem(
+            value = maxUpscaleRatio,
+            valueRange = 100..300,
+            label = stringResource(MR.strings.pref_max_upscale_limit),
+            valueString = "${maxUpscaleRatio}%",
+            onChange = { viewModel.preferences.maxUpscaleRatio.set(it) },
+            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        )
+    }
+
     val zoomStart by viewModel.preferences.zoomStart.collectAsState()
     SettingsChipRow(MR.strings.pref_zoom_start) {
         ReaderPreferences.ZoomStart.mapIndexed { index, it ->
