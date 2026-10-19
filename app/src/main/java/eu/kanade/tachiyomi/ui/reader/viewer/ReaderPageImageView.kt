@@ -142,11 +142,14 @@ open class ReaderPageImageView @JvmOverloads constructor(
                 }
 
                 val fitHeightScale = height.toFloat() / sHeight.toFloat()
+                val halfWidthFitScale = (width.toFloat() * 2f) / sWidth.toFloat()
+                val baseLandscapeScale = minOf(fitHeightScale, halfWidthFitScale)
+
                 val targetScale = if (currentConfig.minimumScaleType == SCALE_TYPE_FIT_SCREEN_LIMITED) {
                     val maxUpscale = (currentConfig.maxUpscaleRatio.coerceAtLeast(100)) / 100f
-                    minOf(fitHeightScale, maxUpscale)
+                    minOf(baseLandscapeScale, maxUpscale)
                 } else {
-                    fitHeightScale
+                    baseLandscapeScale
                 }
 
                 animateScaleAndCenter(targetScale, point)!!
