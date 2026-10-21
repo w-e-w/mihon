@@ -118,6 +118,29 @@ private fun ColumnScope.PagerViewerSettings(viewModel: ReaderSettingsViewModel) 
         pref = viewModel.preferences.landscapeZoom,
     )
 
+    val landscapeZoom by viewModel.preferences.landscapeZoom.collectAsState()
+    if (landscapeZoom && (imageScaleType == 1 || imageScaleType == 7)) {
+        val landscapeZoomDelay by viewModel.preferences.landscapeZoomDelay.collectAsState()
+        SliderItem(
+            value = landscapeZoomDelay,
+            valueRange = 0..1000,
+            label = "Zoom delay",
+            valueString = "${landscapeZoomDelay} ms",
+            onChange = { viewModel.preferences.landscapeZoomDelay.set(it) },
+            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        )
+
+        val landscapeZoomDuration by viewModel.preferences.landscapeZoomDuration.collectAsState()
+        SliderItem(
+            value = landscapeZoomDuration,
+            valueRange = 0..1000,
+            label = "Zoom animation speed",
+            valueString = "${landscapeZoomDuration} ms",
+            onChange = { viewModel.preferences.landscapeZoomDuration.set(it) },
+            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        )
+    }
+
     CheckboxItem(
         label = stringResource(MR.strings.pref_navigate_pan),
         pref = viewModel.preferences.navigateToPan,

@@ -134,7 +134,8 @@ open class ReaderPageImageView @JvmOverloads constructor(
             sWidth > sHeight &&
             isAtMinScale
         ) {
-            handler?.postDelayed(500) {
+            val delayMs = currentConfig.landscapeZoomDelay.toLong().coerceAtLeast(0L)
+            handler?.postDelayed(delayMs) {
                 val point = when (currentConfig.zoomStartPosition) {
                     ZoomStartPosition.LEFT -> if (forward) PointF(0F, 0F) else PointF(sWidth.toFloat(), 0F)
                     ZoomStartPosition.RIGHT -> if (forward) PointF(sWidth.toFloat(), 0F) else PointF(0F, 0F)
@@ -152,8 +153,9 @@ open class ReaderPageImageView @JvmOverloads constructor(
                     baseLandscapeScale
                 }
 
+                val durationMs = currentConfig.landscapeZoomDuration.toLong().coerceAtLeast(0L)
                 animateScaleAndCenter(targetScale, point)!!
-                    .withDuration(500)
+                    .withDuration(durationMs)
                     .withEasing(EASE_IN_OUT_QUAD)
                     .withInterruptible(true)
                     .start()
@@ -483,6 +485,8 @@ open class ReaderPageImageView @JvmOverloads constructor(
         val cropBorders: Boolean = false,
         val zoomStartPosition: ZoomStartPosition = ZoomStartPosition.CENTER,
         val landscapeZoom: Boolean = false,
+        val landscapeZoomDelay: Int = 500,
+        val landscapeZoomDuration: Int = 500,
         val maxUpscaleRatio: Int = 200,
     )
 

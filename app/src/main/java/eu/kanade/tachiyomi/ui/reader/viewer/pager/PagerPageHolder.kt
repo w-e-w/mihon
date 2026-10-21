@@ -171,6 +171,8 @@ class PagerPageHolder(
                         cropBorders = viewer.config.imageCropBorders,
                         zoomStartPosition = viewer.config.imageZoomType,
                         landscapeZoom = viewer.config.landscapeZoom,
+                        landscapeZoomDelay = viewer.config.landscapeZoomDelay,
+                        landscapeZoomDuration = viewer.config.landscapeZoomDuration,
                         maxUpscaleRatio = viewer.config.maxUpscaleRatio,
                     ),
                 )

@@ -96,6 +96,10 @@ class ReaderPreferences(
 
     val landscapeZoom: Preference<Boolean> = preferenceStore.getBoolean("landscape_zoom", true)
 
+    val landscapeZoomDelay: Preference<Int> = preferenceStore.getInt("pref_landscape_zoom_delay_key", 500)
+
+    val landscapeZoomDuration: Preference<Int> = preferenceStore.getInt("pref_landscape_zoom_duration_key", 500)
+
     val cropBordersWebtoon: Preference<Boolean> = preferenceStore.getBoolean("crop_borders_webtoon", false)
 
     val webtoonSidePadding: Preference<Int> = preferenceStore.getInt("webtoon_side_padding", WEBTOON_PADDING_MIN)

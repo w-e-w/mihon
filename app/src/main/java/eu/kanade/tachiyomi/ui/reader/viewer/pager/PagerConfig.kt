@@ -46,6 +46,12 @@ class PagerConfig(
     var landscapeZoom = false
         private set
 
+    var landscapeZoomDelay = 500
+        private set
+
+    var landscapeZoomDuration = 500
+        private set
+
     var maxUpscaleRatio = 200
         private set
 
@@ -73,6 +79,12 @@ class PagerConfig(
 
         readerPreferences.landscapeZoom
             .register({ landscapeZoom = it }, { imagePropertyChangedListener?.invoke() })
+
+        readerPreferences.landscapeZoomDelay
+            .register({ landscapeZoomDelay = it }, { imagePropertyChangedListener?.invoke() })
+
+        readerPreferences.landscapeZoomDuration
+            .register({ landscapeZoomDuration = it }, { imagePropertyChangedListener?.invoke() })
 
         readerPreferences.navigationModePager
             .register({ navigationMode = it }, { updateNavigation(navigationMode) })

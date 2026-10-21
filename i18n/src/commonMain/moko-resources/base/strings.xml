@@ -496,6 +496,8 @@
     <string name="scale_type_smart_fit">Smart fit</string>
     <string name="pref_navigate_pan">Pan wide images</string>
     <string name="pref_landscape_zoom">Automatically zoom into wide images</string>
+    <string name="pref_landscape_zoom_delay">Landscape zoom delay</string>
+    <string name="pref_landscape_zoom_duration">Landscape zoom animation duration</string>
     <string name="pref_zoom_start">Zoom start position</string>
     <string name="zoom_start_automatic">Automatic</string>
     <string name="zoom_start_left">Left</string>

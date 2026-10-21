@@ -242,6 +242,20 @@ object SettingsReaderScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_landscape_zoom),
                     visible = imageScaleType == 1 || imageScaleType == 7,
                 ),
+                Preference.PreferenceItem.SliderPreference(
+                    preference = readerPreferences.landscapeZoomDelay,
+                    valueRange = 0..1000,
+                    title = stringResource(MR.strings.pref_landscape_zoom_delay),
+                    valueText = { "${it} ms" },
+                    visible = imageScaleType == 1 || imageScaleType == 7,
+                ),
+                Preference.PreferenceItem.SliderPreference(
+                    preference = readerPreferences.landscapeZoomDuration,
+                    valueRange = 0..1000,
+                    title = stringResource(MR.strings.pref_landscape_zoom_duration),
+                    valueText = { "${it} ms" },
+                    visible = imageScaleType == 1 || imageScaleType == 7,
+                ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = readerPreferences.navigateToPan,
                     title = stringResource(MR.strings.pref_navigate_pan),
