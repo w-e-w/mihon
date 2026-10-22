@@ -151,24 +151,6 @@ data class BrowseSourceScreen(
                             .padding(horizontal = MaterialTheme.padding.small),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
                     ) {
-                        FilterChip(
-                            selected = state.listing == Listing.Popular,
-                            onClick = {
-                                viewModel.resetFilters()
-                                viewModel.setListing(Listing.Popular)
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = MaterialSymbols.RoundedFilled.Favorite,
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(FilterChipDefaults.IconSize),
-                                )
-                            },
-                            label = {
-                                Text(text = stringResource(MR.strings.popular))
-                            },
-                        )
                         if (source.supportsLatest) {
                             FilterChip(
                                 selected = state.listing == Listing.Latest,
@@ -189,6 +171,24 @@ data class BrowseSourceScreen(
                                 },
                             )
                         }
+                        FilterChip(
+                            selected = state.listing == Listing.Popular,
+                            onClick = {
+                                viewModel.resetFilters()
+                                viewModel.setListing(Listing.Popular)
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = MaterialSymbols.RoundedFilled.Favorite,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(FilterChipDefaults.IconSize),
+                                )
+                            },
+                            label = {
+                                Text(text = stringResource(MR.strings.popular))
+                            },
+                        )
                         if (state.filters.isNotEmpty()) {
                             FilterChip(
                                 selected = state.listing is Listing.Search,
